@@ -93,4 +93,4 @@ filtered_hospital_data = pd.DataFrame(data=aggregated_data, columns=['open_covid
 filtered_symptom_data['date'] = filtered_symptom_data['date'].map(lambda x: date(*map(int, x.split('-'))))
 merged_data = pd.merge(filtered_symptom_data, filtered_hospital_data, on=['open_covid_region_code', 'date'])
 
-merged_data.to_csv('./merged_data.csv')
+merged_data.to_csv('../data/merged_data.csv')
