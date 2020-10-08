@@ -33,15 +33,15 @@ if (slice * 5 + 3 < len(region_names)):
 #split into training and validation sets based on time (data after a timestamp for validate, before for train)
 dates = merged_data.groupby(merged_data['date']).aggregate('count')
 dates_span = list(dates.index) #list of all dates
-slice = (int) (len(dates_span) / 5) #we'll keep 20% (or less if len(dates_span) not divisible by 5) for validation. rest is training
+slice = dates_span.index("2020-08-10") + 1 #keep dates after 2020-08-10
 
 time_training = pd.DataFrame()
 time_validation = pd.DataFrame()
 
-for a in range(len(dates_span) - slice):
+for a in range(slice):
     time_training = time_training.append(merged_data[merged_data['date'] == dates_span[a]])
 
-for b in range(slice):
+for b in range(len(dates_span) - slice):
     time_validation = time_validation.append(merged_data[merged_data['date'] == dates_span[a + 1 + b]])
     #print(time_validation.iloc[:,6])
 
@@ -50,18 +50,18 @@ for b in range(slice):
 #predict hospitalization based on symptom search
 
 #KNN regression performance with regions (5-fold cross validation)
-regions_training = [pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()] #5-fold cross validation
-regions_validation = [pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()]
+region_training = [pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()] #5-fold cross validation
+region_validation = [pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()]
 
 for c in range(5):
     region_validation[c] = region_groups[c]
     for d in range(5):
         if (d != c):
-            region_training[c] = regions_training[c].append(region_groups[d])
+            region_training[c] = region_training[c].append(region_groups[d])
 
 for n in range(5):
-    X = regions_training[n].iloc[:, 7:21].values #symptoms
-    y = regions_training[n].iloc[:, 22].values #new hospitalizations
+    X = region_training[n].iloc[:, 7:21].values #symptoms
+    y = region_training[n].iloc[:, 22].values #new hospitalizations
 
 #KNN regression performance with date
 

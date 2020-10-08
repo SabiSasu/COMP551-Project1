@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from datetime import date, timedelta
 
-merged_data = pd.read_csv('./merged_data.csv')
+merged_data = pd.read_csv('../data/merged_data.csv')
 
 #chosen_symptons=['Angular cheilitis', 'Aphonia' , 'Burning Chest Pain', 'Crackles', 'Dysautonomia', 'Hemolysis','Laryngitis','Myoclonus','Polydipsia','Rectal pain','Shallow breathing','Urinary urgency','Ventricular fibrillation','Viral pneumonia']
 
