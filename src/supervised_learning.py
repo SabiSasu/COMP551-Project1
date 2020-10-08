@@ -59,9 +59,30 @@ for c in range(5):
         if (d != c):
             region_training[c] = region_training[c].append(region_groups[d])
 
-for n in range(5):
-    X = region_training[n].iloc[:, 7:21].values #symptoms
-    y = region_training[n].iloc[:, 22].values #new hospitalizations
+symptom_names = [s for s in merged_data.columns.values if s.startswith('symptom:')]
+
+start = merged_data.columns.get_loc(symptom_names[0])
+end = merged_data.columns.get_loc(symptom_names[-1])
+
+#assuming all symptom columns are one next to another in merged_data
+
+k = [1, 5, 15]
+
+for m in range(len(k)): #trying different K's
+    for n in range(5):
+        X_train = region_training[n].iloc[:, start:(end + 1)].values #symptoms
+        y_train = region_training[n].iloc[:, -1].values #new hospitalizations
+        X_valid = region_validation[n].iloc[:, start:(end + 1)].values
+        y_valid = region_validation[n].iloc[:, -1].values
+        print(region_training[n])
+        print("NEXT")
+        print(X_train)
+
+        regressor = KNeighborsRegressor(n_neighbors=k[m])
+        regressor.fit(X_train, y_train)
+        y_predicted = regressor.predict(X_valid)
+        print(y_predicted)
+#should we perform scaling?
 
 #KNN regression performance with date
 
