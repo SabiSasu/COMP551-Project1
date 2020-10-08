@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
+from sklearn.neighbors import KNeighborsRegressor
 from datetime import date, timedelta
 
+#TASK 3: SUPERVISED LEARNING
+#PART 1
 
 #get the new dataset and load it into pandas dataframe
 merged_data = pd.read_csv("../data/merged_data.csv")
@@ -35,10 +38,35 @@ slice = (int) (len(dates_span) / 5) #we'll keep 20% (or less if len(dates_span) 
 time_training = pd.DataFrame()
 time_validation = pd.DataFrame()
 
-for x in range(len(dates_span) - slice):
-    time_training = time_training.append(merged_data[merged_data['date'] == dates_span[x]])
+for a in range(len(dates_span) - slice):
+    time_training = time_training.append(merged_data[merged_data['date'] == dates_span[a]])
 
-for y in range(slice):
-    time_validation = time_validation.append(merged_data[merged_data['date'] == dates_span[x + 1 + y]])
+for b in range(slice):
+    time_validation = time_validation.append(merged_data[merged_data['date'] == dates_span[a + 1 + b]])
     #print(time_validation.iloc[:,6])
+
+#PART 2
+
+#predict hospitalization based on symptom search
+
+#KNN regression performance with regions (5-fold cross validation)
+regions_training = [pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()] #5-fold cross validation
+regions_validation = [pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()]
+
+for c in range(5):
+    region_validation[c] = region_groups[c]
+    for d in range(5):
+        if (d != c):
+            region_training[c] = regions_training[c].append(region_groups[d])
+
+for n in range(5):
+    X = regions_training[n].iloc[:, 7:21].values #symptoms
+    y = regions_training[n].iloc[:, 22].values #new hospitalizations
+
+#KNN regression performance with date
+
+#decision tree regression performance with regions
+
+#decision tree regression performance with date
+
  
