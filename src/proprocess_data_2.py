@@ -46,7 +46,7 @@ for region, region_data in d.items():
 
 converted_weekly_data = pd.DataFrame(data=summed_daily_data, columns=daily_symptom_data.columns.values)
 
-converted_weekly_data.to_csv('./daily_to_weekly_symptoms.csv')
+converted_weekly_data.to_csv('../data/daily_to_weekly_symptoms.csv')
 
 symptoms_data = converted_weekly_data
 
@@ -152,5 +152,5 @@ interpolated_merged_data.dropna(axis='columns', how='all', inplace=True)
 # Drop symptoms with missing region data
 interpolated_merged_data.dropna(axis='columns', how='any', inplace=True)
 
-interpolated_merged_data.to_csv('./interpolated_merged_data.csv')
-merged_data.to_csv('./merged_data.csv')
+interpolated_merged_data.to_csv('../data/interpolated_merged_data.csv')
+merged_data.to_csv('../data/merged_data.csv')

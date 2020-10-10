@@ -7,7 +7,7 @@ from datetime import date, timedelta
 #PART 1
 
 #get the new dataset and load it into pandas dataframe
-merged_data = pd.read_csv("../data/merged_data.csv")
+merged_data = pd.read_csv("../data/interpolated_merged_data.csv")
 
 #split into training and validation sets based on region (80% train 20% validate)
 regions = merged_data.groupby(merged_data['open_covid_region_code']).aggregate('count')
@@ -65,24 +65,63 @@ start = merged_data.columns.get_loc(symptom_names[0])
 end = merged_data.columns.get_loc(symptom_names[-1])
 
 #assuming all symptom columns are one next to another in merged_data
+#SHOULD WE PERFORM SCALING?
 
-k = [1, 5, 15]
+k = [1, 3, 5, 10, 15, 20]
+
+k_array_results = np.empty((len(k), 3))
 
 for m in range(len(k)): #trying different K's
+    five_fold_cost = [0, 0, 0, 0, 0]
+
     for n in range(5):
         X_train = region_training[n].iloc[:, start:(end + 1)].values #symptoms
         y_train = region_training[n].iloc[:, -1].values #new hospitalizations
         X_valid = region_validation[n].iloc[:, start:(end + 1)].values
         y_valid = region_validation[n].iloc[:, -1].values
-        print(region_training[n])
-        print("NEXT")
-        print(X_train)
+        #print(region_training[n])
+        #print("NEXT")
+        #print(X_train)
 
         regressor = KNeighborsRegressor(n_neighbors=k[m])
         regressor.fit(X_train, y_train)
         y_predicted = regressor.predict(X_valid)
-        print(y_predicted)
-#should we perform scaling?
+        #print(X_valid.shape)
+        #print(y_predicted.shape)
+        #print(X_valid)
+        #print(y_predicted)
+        #print("Y VALID")
+        #print(y_valid)
+        cost = 0
+        
+        for u in (range(len(y_predicted))):
+            error = (y_predicted[u] - y_valid[u])**2
+            #print(error)
+            cost = cost + error
+
+        cost = cost/(len(y_predicted))
+        #print(cost)
+        five_fold_cost[n] = cost
+    
+    #calculate the mean and variance for 5-fold
+    mean = (five_fold_cost[0] + five_fold_cost[1] + five_fold_cost[2] + five_fold_cost[3] + five_fold_cost[4])/5
+    variance = np.var(five_fold_cost)
+    
+    k_array_results[m][0] = k[m]
+    k_array_results[m][1] = mean
+    k_array_results[m][2] = variance
+
+#print(k_array_results) 
+best_mean = float("inf")
+best_index = 0
+
+for t in range(len(k_array_results)):
+    if (k_array_results[t][1] < best_mean):
+        best_mean = k_array_results[t][1]
+        best_index = t
+#IN THE NOTES IT SAYS TO CHOOSE THE SIMPLEST MODEL WITHIN 1 STANDARD DEVIATION BUT IDK WHAT HE MEANS BY THT
+print(best_index)
+
 
 #KNN regression performance with date
 
