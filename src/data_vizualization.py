@@ -41,6 +41,7 @@ data_maine_angular['ratio']=ratio
 #display symptom search per region per week
 #temporarily displays one plot at a time, but will be grouped up later
 for sym_index, symptom_name in enumerate(symptoms_list):
+    continue
     colors = 'b', 'g', 'r', 'c', 'm', 'y', 'k', 'w'
     width = 0.8
     bottoms = np.array([0])
@@ -71,8 +72,69 @@ for sym_index, symptom_name in enumerate(symptoms_list):
 
 
 #PCA
+from sklearn import datasets
+iris = datasets.load_iris()
 
+#X,y = [[0.6 0.4] [1.2 0.5] [2.1 0.2]], symptoms_list
+#X=iris.data
+merged_data=merged_data.fillna(0)
+X=merged_data[merged_data.columns[7:21]]
+print(X)
+print(iris.data)
+# Time to get them tools --> import and initialize
+from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+pca.fit(X)
+X_reduced = pca.transform(X)
 
+# Let's make a scatter plot as before for this reduced dimension Iris data
+# this formatter will label the colorbar with the correct target names
+#formatter = plt.FuncFormatter(lambda i, *args: iris.target_names[int(i)])
+
+#plt.scatter(X_reduced[:,0], X_reduced[:,1], c=y, cmap=plt.cm.get_cmap('viridis',3))
+plt.scatter(X_reduced[:,0], X_reduced[:,1])
+#plt.colorbar(ticks=[0,1,2], format=formatter)
+plt.clim(-0.5,2.5)
+plt.xlabel("PC #1")
+plt.ylabel("PC #2")
+plt.show()
 
 
 #Clusters
+# Import the KMeans module from sklearn
+from sklearn.cluster import KMeans
+kmeans_high = KMeans(n_clusters=3, random_state=0)
+kmeans_high.fit(X)
+y_pred_high = kmeans_high.predict(X)
+
+kmeans_low = KMeans(n_clusters=3, random_state=0)
+kmeans_low.fit(X_reduced)
+y_pred_low = kmeans_low.predict(X_reduced)
+
+# Plot 3 scatter plots -- two for high and low dimensional clustering results and one indicating the ground truth labels
+
+plt.subplot(3,1,1)
+plt.scatter(X_reduced[:,0], X_reduced[:,1], c=y_pred_high, cmap=plt.cm.get_cmap('viridis',3))
+plt.colorbar(ticks=[0,1,2])
+plt.clim(-0.5,2.5)
+plt.xlabel("PC #1")
+plt.ylabel("PC #2")
+plt.title("Cluster labels for high-dimensional KMeans")
+
+plt.subplot(3,1,2)
+plt.scatter(X_reduced[:,0], X_reduced[:,1], c=y_pred_low, cmap=plt.cm.get_cmap('viridis',3))
+plt.colorbar(ticks=[0,1,2])
+plt.clim(-0.5,2.5)
+plt.xlabel("PC #1")
+plt.ylabel("PC #2")
+plt.title("Cluster labels for low-dimensional KMeans")
+
+plt.subplot(3,1,3)
+#plt.scatter(X_reduced[:,0], X_reduced[:,1], c=y, cmap=plt.cm.get_cmap('viridis',3))
+plt.scatter(X_reduced[:,0], X_reduced[:,1], cmap=plt.cm.get_cmap('viridis',3))
+#plt.colorbar(ticks=[0,1,2], format=formatter)
+plt.clim(-0.5,2.5)
+plt.xlabel("PC #1")
+plt.ylabel("PC #2")
+plt.title("Ground truth labels")
+plt.show()
