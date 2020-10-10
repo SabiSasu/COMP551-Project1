@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.tree import DecisionTreeRegressor
 from datetime import date, timedelta
 
 #TASK 3: SUPERVISED LEARNING
@@ -111,7 +112,7 @@ for m in range(len(k)): #trying different K's
     region_k_array_results[m][1] = mean
     region_k_array_results[m][2] = variance
 
-#print(k_array_results) 
+#the best KNN with regions
 region_best_mean = float("inf")
 region_best_index = 0
 
@@ -157,7 +158,7 @@ for m in range(len(k)): #trying different K's
     time_k_array_results[m][0] = k[m]
     time_k_array_results[m][1] = cost
 
-#print(k_array_results) 
+#the best KNN with dates
 time_best_cost = float("inf")
 time_best_index = 0
 
@@ -166,10 +167,58 @@ for t in range(len(time_k_array_results)):
         time_best_cost = time_k_array_results[t][1]
         time_best_index = t
 
-print(time_k_array_results)
-print(time_best_index)
+#print(time_k_array_results)
+#print(time_best_index)
+
 #decision tree regression performance with regions
+
+five_fold_cost = [0, 0, 0, 0, 0]
+
+for n in range(5):
+     X_train = region_training[n].iloc[:, start:(end + 1)].values #symptoms
+     y_train = region_training[n].iloc[:, -1].values #new hospitalizations
+     X_valid = region_validation[n].iloc[:, start:(end + 1)].values
+     y_valid = region_validation[n].iloc[:, -1].values
+
+     regressor = DecisionTreeRegressor(random_state=0)
+     regressor.fit(X_train, y_train)
+     y_predicted = regressor.predict(X_valid)
+
+     cost = 0
+     for u in (range(len(y_predicted))):
+        error = (y_predicted[u] - y_valid[u])**2
+        #print(error)
+        cost = cost + error
+
+     cost = cost/(len(y_predicted))
+     #print(cost)
+     five_fold_cost[n] = cost
+
+region_decision_tree_avg_cost = (five_fold_cost[0] + five_fold_cost[1] + five_fold_cost[2] + five_fold_cost[3] + five_fold_cost[4])/5  
+#print(region_decision_tree_avg_cost)
+
 
 #decision tree regression performance with date
 
- 
+X_train = time_training.iloc[:, start:(end + 1)].values #symptoms
+y_train = time_training.iloc[:, -1].values #new hospitalizations
+X_valid = time_validation.iloc[:, start:(end + 1)].values
+y_valid = time_validation.iloc[:, -1].values
+
+regressor = DecisionTreeRegressor(random_state=0)
+regressor.fit(X_train, y_train)
+y_predicted = regressor.predict(X_valid)
+
+cost = 0
+for u in (range(len(y_predicted))):
+    error = (y_predicted[u] - y_valid[u])**2
+    #print(error)
+    cost = cost + error
+
+cost = cost/(len(y_predicted))
+print(region_k_array_results)
+print(time_k_array_results)
+print("KNN with regions average cost: " + str(region_best_mean) + " with optimal k = " + str(region_k_array_results[region_best_index][0]))
+print("KNN with dates cost: " + str(time_best_cost) + " with optimal k = " + str(time_k_array_results[time_best_index][0]))
+print("decision tree with region average cost: " + str(region_decision_tree_avg_cost))
+print("decision tree with dates cost: " + str(cost))
