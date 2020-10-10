@@ -69,7 +69,7 @@ end = merged_data.columns.get_loc(symptom_names[-1])
 
 k = [1, 3, 5, 10, 15, 20]
 
-k_array_results = np.empty((len(k), 3))
+region_k_array_results = np.empty((len(k), 3)) #k, mean of costs for 5-fold, variance of costs for 5-fold
 
 for m in range(len(k)): #trying different K's
     five_fold_cost = [0, 0, 0, 0, 0]
@@ -107,24 +107,67 @@ for m in range(len(k)): #trying different K's
     mean = (five_fold_cost[0] + five_fold_cost[1] + five_fold_cost[2] + five_fold_cost[3] + five_fold_cost[4])/5
     variance = np.var(five_fold_cost)
     
-    k_array_results[m][0] = k[m]
-    k_array_results[m][1] = mean
-    k_array_results[m][2] = variance
+    region_k_array_results[m][0] = k[m]
+    region_k_array_results[m][1] = mean
+    region_k_array_results[m][2] = variance
 
 #print(k_array_results) 
-best_mean = float("inf")
-best_index = 0
+region_best_mean = float("inf")
+region_best_index = 0
 
-for t in range(len(k_array_results)):
-    if (k_array_results[t][1] < best_mean):
-        best_mean = k_array_results[t][1]
-        best_index = t
+for t in range(len(region_k_array_results)):
+    if (region_k_array_results[t][1] < region_best_mean):
+        region_best_mean = region_k_array_results[t][1]
+        region_best_index = t
 #IN THE NOTES IT SAYS TO CHOOSE THE SIMPLEST MODEL WITHIN 1 STANDARD DEVIATION BUT IDK WHAT HE MEANS BY THT
-print(best_index)
 
 
 #KNN regression performance with date
+time_k_array_results = np.empty((len(k), 2)) #k, cost
 
+for m in range(len(k)): #trying different K's
+    
+    X_train = time_training.iloc[:, start:(end + 1)].values #symptoms
+    y_train = time_training.iloc[:, -1].values #new hospitalizations
+    X_valid = time_validation.iloc[:, start:(end + 1)].values
+    y_valid = time_validation.iloc[:, -1].values
+    #print(region_training[n])
+    #print("NEXT")
+    #print(X_train)
+
+    regressor = KNeighborsRegressor(n_neighbors=k[m])
+    regressor.fit(X_train, y_train)
+    y_predicted = regressor.predict(X_valid)
+    #print(X_valid.shape)
+    #print(y_predicted.shape)
+    #print(X_valid)
+    #print(y_predicted)
+    #print("Y VALID")
+    #print(y_valid)
+    cost = 0
+        
+    for u in (range(len(y_predicted))):
+        error = (y_predicted[u] - y_valid[u])**2
+        #print(error)
+        cost = cost + error
+
+    cost = cost/(len(y_predicted))
+    #print(cost)
+        
+    time_k_array_results[m][0] = k[m]
+    time_k_array_results[m][1] = cost
+
+#print(k_array_results) 
+time_best_cost = float("inf")
+time_best_index = 0
+
+for t in range(len(time_k_array_results)):
+    if (time_k_array_results[t][1] < time_best_cost):
+        time_best_cost = time_k_array_results[t][1]
+        time_best_index = t
+
+print(time_k_array_results)
+print(time_best_index)
 #decision tree regression performance with regions
 
 #decision tree regression performance with date
