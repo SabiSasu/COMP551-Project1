@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from datetime import date, timedelta
-from sklearn.impute import SimpleImputer
 
 # download and load datasets into Pandas Dataframe
 hospital_data = pd.read_csv('https://raw.githubusercontent.com/google-research/open-covid-19-data/master/data/exports/cc_by/aggregated_cc_by.csv')
@@ -36,7 +35,7 @@ for region, region_data in d.items():
     # sum daily symptom data for each full week in the region's data set
     while weekly_data.shape[0] == 7:
         col_vals = [region, start_week]
-        col_vals.extend(weekly_data.sum(skipna=False).values)
+        col_vals.extend(weekly_data.mean(skipna=False).values)
         summed_daily_data.append(col_vals)
 
         start_week = end_week
@@ -54,7 +53,7 @@ symptoms_data = converted_weekly_data
 # CLEAN SYMPTOM DATA
 #
 
-region_sparseness_thresh = 0.9
+region_sparseness_thresh = 0.8
 
 symptom_names = [s for s in symptoms_data.columns.values if s.startswith('symptom:')]
 num_weeks = symptoms_data['open_covid_region_code'].value_counts()[0]
@@ -147,10 +146,10 @@ merged_data = pd.merge(filtered_symptom_data, filtered_hospital_data, on=['open_
 merged_data.dropna(axis='columns', how='all', inplace=True)
 
 interpolated_merged_data = pd.merge(interpolated_symptom_data, filtered_hospital_data, on=['open_covid_region_code', 'date'])
-interpolated_merged_data.dropna(axis='columns', how='all', inplace=True)
-
-# Drop symptoms with missing region data
 interpolated_merged_data.dropna(axis='columns', how='any', inplace=True)
 
+# Drop symptoms with missing region data
+# interpolated_merged_data.dropna(axis='columns', how='any', inplace=True)
+
 interpolated_merged_data.to_csv('../data/interpolated_merged_data.csv')
-merged_data.to_csv('../data/merged_data.csv')
+# merged_data.to_csv('../data/merged_data.csv')
