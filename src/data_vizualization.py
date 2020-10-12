@@ -5,85 +5,69 @@ from sklearn.decomposition import PCA
 from datetime import date, timedelta
 
 merged_data = pd.read_csv('../data/merged_data.csv')
-
-#chosen_symptons=['Angular cheilitis', 'Aphonia' , 'Burning Chest Pain', 'Crackles', 'Dysautonomia', 'Hemolysis','Laryngitis','Myoclonus','Polydipsia','Rectal pain','Shallow breathing','Urinary urgency','Ventricular fibrillation','Viral pneumonia']
+merged_data=merged_data.fillna(0)
+chosen_symptoms=['symptom:Cough', 'symptom:Common cold' , 'symptom:Fever', 'symptom:Pneumonia']
 
 symptoms_list=[s for s in merged_data.columns.values if s.startswith('symptom:')]
 #print(symptoms_list)
-regions = merged_data.groupby(merged_data['sub_region_1']).aggregate('count')
+regions = merged_data.groupby(merged_data['open_covid_region_code']).aggregate('count')
 regions = regions[merged_data]
 region_names = list(regions.index)
 #print(region_names)
 #get region
-by_state = merged_data.groupby('sub_region_1')
+by_state = merged_data.groupby('open_covid_region_code')
 
 date_data = by_state.get_group(region_names[0]).sort_values(by=['date'])['date']
-symptom_data = by_state.get_group(region_names[0]).sort_values(by=['date'])['symptom:Angular cheilitis']
 
-data_maine_angular = {'Date': by_state.get_group(region_names[0]).sort_values(by=['date'])['date'],
-        'symptom_data': by_state.get_group(region_names[0]).sort_values(by=['date'])['symptom:Angular cheilitis']}
-
-symptom_median = symptom_data[0]
-ratio=[]
-ratio.append(symptom_data[0])
-
-#might not need ratio calculation, but in case we do i'll leave what i started here
-for index, data in enumerate(data_maine_angular['symptom_data'], 1):
-    #calculate ratio
-    ratio.append(round(data/symptom_median, 1))
-    #recalculate median
-    symptom_median = ((symptom_median*index)+data)/(index+1)
-
-data_maine_angular['ratio']=ratio
-#print(data_maine_angular)
-
-
+print(merged_data.columns[7:21])
 #display symptom search per region per week
 #temporarily displays one plot at a time, but will be grouped up later
-for sym_index, symptom_name in enumerate(symptoms_list):
-    continue
-    colors = 'b', 'g', 'r', 'c', 'm', 'y', 'k', 'w'
+for sym_index, symptom_name in enumerate(chosen_symptoms):
+    #continue
+    colors = 'b', 'g', 'r', 'c', 'm', 'y', 'k'
     width = 0.8
     bottoms = np.array([0])
-
+    tempI=0
+    colIndex=0
     for index, region_name in enumerate(region_names):
-        if index == 4:
-            continue
 
-        #drop extra weeks if there are any
-        temp = by_state.get_group(region_name)
-        temp = temp.sort_values(by=['date'])[symptom_name]
+        temp = by_state.get_group(region_name).sort_values(by=['date'])[symptom_name]
+        #print('before:')
+        #print(temp)
         temp[np.isnan(temp)] = 0
 
         #calculate median and divide the values in array by median
         temp = np.true_divide(temp, np.median(temp))
+        #print('after:')
+        #print(temp)
+
+        #Replace all the region values in the symptom column by the median
+        #for replaceI, tempEnum in enumerate(temp):
+        #    merged_data.at[tempI, symptom_name] = tempEnum
+        #    tempI+=1
 
 
-        plt.bar(date_data, temp, width, bottom=bottoms, color=colors[index])
+        if colIndex >= len(colors):
+            colIndex=0
+        plt.bar(date_data, temp, width, bottom=bottoms, color=colors[colIndex])
         bottoms = np.add(bottoms, np.array(temp))
-        print(bottoms)
+        colIndex+=1
 
     plt.title(symptom_name)
     plt.xticks(rotation=90)
     plt.legend(labels=region_names)
     plt.show()
-    #breaks for now until I decide on most popular symptoms
-    break
+    #break
 
 
 #PCA
-from sklearn import datasets
-iris = datasets.load_iris()
 
-#X,y = [[0.6 0.4] [1.2 0.5] [2.1 0.2]], symptoms_list
-#X=iris.data
-merged_data=merged_data.fillna(0)
-X=merged_data[merged_data.columns[7:21]]
+X=merged_data[merged_data.columns[3:len(symptoms_list)+3]]
 print(X)
-print(iris.data)
+#print(iris.data)
 # Time to get them tools --> import and initialize
 from sklearn.decomposition import PCA
-pca = PCA(n_components=2)
+pca = PCA(n_components=len(symptoms_list))
 pca.fit(X)
 X_reduced = pca.transform(X)
 
@@ -101,7 +85,6 @@ plt.show()
 
 
 #Clusters
-# Import the KMeans module from sklearn
 from sklearn.cluster import KMeans
 kmeans_high = KMeans(n_clusters=3, random_state=0)
 kmeans_high.fit(X)
