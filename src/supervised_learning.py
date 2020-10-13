@@ -67,9 +67,8 @@ start = merged_data.columns.get_loc(symptom_names[0])
 end = merged_data.columns.get_loc(symptom_names[-1])
 
 #assuming all symptom columns are one next to another in merged_data
-#SHOULD WE PERFORM SCALING?
 
-k = [1, 3, 5, 10, 15, 20]
+k = [1, 10, 20, 25, 30, 33, 35, 37, 40, 43, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 225, 250, 275, 300]
 
 region_k_array_results = np.empty((len(k), 2)) #k, mean of costs for 5-fold
 
@@ -91,6 +90,9 @@ for m in range(len(k)): #trying different K's
         X_train = scaler.transform(X_train)
         X_valid = scaler.transform(X_valid)
 
+        if k[m] > len(X_train):
+            k[m] = len(X_train)
+            
         regressor = KNeighborsRegressor(n_neighbors=k[m])
         regressor.fit(X_train, y_train)
         y_predicted = regressor.predict(X_valid)
@@ -107,7 +109,7 @@ for m in range(len(k)): #trying different K's
             #print(error)
             cost = cost + error
 
-        cost = cost/(len(y_predicted))
+        cost = (cost/(len(y_predicted)))**(1/2) #using RMSE
         #print(cost)
         five_fold_cost[n] = cost
     
@@ -120,7 +122,8 @@ for m in range(len(k)): #trying different K's
 #the best KNN with regions
 region_best_mean = float("inf")
 region_best_index = 0
-region_standard_dev_of_Ks = np.std(region_k_array_results[:1])
+#print( [i[1] for i in region_k_array_results])
+region_standard_dev_of_Ks = np.std([i[1] for i in region_k_array_results])
 
 for t in range(len(region_k_array_results)):
     if (region_k_array_results[t][1] < region_best_mean):
@@ -128,6 +131,19 @@ for t in range(len(region_k_array_results)):
         region_best_index = t
 #print(region_k_array_results)
 #print(region_standard_dev_of_Ks)
+#print(region_k_array_results[region_best_index])
+#print(region_best_mean)
+#print(region_standard_dev_of_Ks)
+
+acceptable_model = region_best_mean + region_standard_dev_of_Ks
+region_acceptable_mean = 0
+region_acceptable_index = 0
+#loop again to find the best model within 1 standard deviation of the model with lowest mean
+for t in range(len(region_k_array_results)):
+    if (region_k_array_results[t][1] < acceptable_model):
+        region_acceptable_mean = region_k_array_results[t][1]
+        region_acceptable_index = t
+        break
 
 #KNN regression performance with date
 time_k_array_results = np.empty((len(k), 2)) #k, cost
@@ -148,6 +164,9 @@ for m in range(len(k)): #trying different K's
     X_train = scaler.transform(X_train)
     X_valid = scaler.transform(X_valid)
 
+    if k[m] > len(X_train):
+            k[m] = len(X_train)
+
     regressor = KNeighborsRegressor(n_neighbors=k[m])
     regressor.fit(X_train, y_train)
     y_predicted = regressor.predict(X_valid)
@@ -164,7 +183,7 @@ for m in range(len(k)): #trying different K's
         #print(error)
         cost = cost + error
 
-    cost = cost/(len(y_predicted))
+    cost = (cost/(len(y_predicted)))**(1/2) #RMSE
     #print(cost)
         
     time_k_array_results[m][0] = k[m]
@@ -173,7 +192,7 @@ for m in range(len(k)): #trying different K's
 #the best KNN with dates
 time_best_cost = float("inf")
 time_best_index = 0
-time_standard_dev_of_Ks = np.std(time_k_array_results[:1])
+time_standard_dev_of_Ks = np.std([i[1] for i in time_k_array_results])
 
 for t in range(len(time_k_array_results)):
     if (time_k_array_results[t][1] < time_best_cost):
@@ -182,6 +201,17 @@ for t in range(len(time_k_array_results)):
 
 #print(time_k_array_results)
 #print(time_best_index)
+
+acceptable_model = time_best_cost + time_standard_dev_of_Ks
+time_acceptable_cost = 0
+time_acceptable_index = 0
+
+#loop again to find the best model within 1 standard deviation of the model with lowest mean
+for t in range(len(time_k_array_results)):
+    if (time_k_array_results[t][1] < acceptable_model):
+        time_acceptable_cost = time_k_array_results[t][1]
+        time_acceptable_index = t
+        break
 
 #decision tree regression performance with regions
 
@@ -203,7 +233,7 @@ for n in range(5):
         #print(error)
         cost = cost + error
 
-     cost = cost/(len(y_predicted))
+     cost = (cost/(len(y_predicted)))**(1/2)
      #print(cost)
      five_fold_cost[n] = cost
 
@@ -228,11 +258,13 @@ for u in (range(len(y_predicted))):
     #print(error)
     cost = cost + error
 
-cost = cost/(len(y_predicted))
+cost = (cost/(len(y_predicted)))**(1/2)
 #print(region_k_array_results)
 #print(time_k_array_results)
 
 print("KNN with regions average cost: " + str(region_best_mean) + " with optimal k = " + str(region_k_array_results[region_best_index][0]))
+print("But choosing the simplest model within 1 standard deviation " + str(region_standard_dev_of_Ks) + " of the best model: " + str(region_acceptable_mean) + "with acceptable k = " + str(region_k_array_results[region_acceptable_index][0]))
 print("KNN with dates cost: " + str(time_best_cost) + " with optimal k = " + str(time_k_array_results[time_best_index][0]))
+print("But choosing the simplest model within 1 standard deviation " + str(time_standard_dev_of_Ks) + " of the best model: " + str(time_acceptable_cost) + "with acceptable k = " + str(time_k_array_results[time_acceptable_index][0]))
 print("decision tree with region average cost: " + str(region_decision_tree_avg_cost))
 print("decision tree with dates cost: " + str(cost))
