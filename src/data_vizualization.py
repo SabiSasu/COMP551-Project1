@@ -20,7 +20,7 @@ by_state = merged_data.groupby('open_covid_region_code')
 
 date_data = by_state.get_group(region_names[0]).sort_values(by=['date'])['date']
 
-print(merged_data.columns[7:21])
+#print(merged_data.columns[7:21])
 #display symptom search per region per week
 #temporarily displays one plot at a time, but will be grouped up later
 #for sym_index, symptom_name in enumerate(chosen_symptoms):
@@ -45,9 +45,9 @@ for sym_index, symptom_name in enumerate(symptoms_list):
         #print(temp)
 
         #Replace all the region values in the symptom column by the median
-        #for replaceI, tempEnum in enumerate(temp):
-        #    merged_data.at[tempI, symptom_name] = tempEnum
-        #    tempI+=1
+        for replaceI, tempEnum in enumerate(temp):
+            merged_data.at[tempI, symptom_name] = tempEnum
+            tempI+=1
 
 
         if colIndex >= len(colors):
@@ -63,6 +63,8 @@ for sym_index, symptom_name in enumerate(symptoms_list):
         plt.legend(labels=region_names)
         plt.show()
        #break
+#save data
+merged_data.to_csv('../data/interpolated_merged_data_scaled.csv')
 
 #PCA
 #get only columns with symptoms
@@ -87,13 +89,9 @@ plt.title("Cumulative Variance Explained vs Principal Components")
 plt.show()
 
 
-
-
-
-
 #PCA graph
 markersize=4
-pca = PCA(n_components=3)
+pca = PCA(n_components=2)
 pca.fit(X)
 X_reduced = pca.transform(X)
 plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
@@ -110,7 +108,7 @@ for k in ks:
     model = KMeans(n_clusters=k)
 
     # Fit model to samples
-    model.fit(X_reduced)
+    model.fit(X)
 
     # Append the inertia to the list of inertias
     inertias.append(model.inertia_)
@@ -121,43 +119,44 @@ plt.ylabel('inertia')
 plt.xticks(ks)
 plt.show()
 
+ks = range(2, 7)
+for k in ks:
+    #Clusters
+    clusterNum=k
+    #high is raw data
+    kmeans_high = KMeans(n_clusters=clusterNum, random_state=0)
+    kmeans_high.fit(X)
+    y_pred_high = kmeans_high.predict(X)
 
-#Clusters
-clusterNum=4
-#high is raw data
-kmeans_high = KMeans(n_clusters=clusterNum, random_state=0)
-kmeans_high.fit(X)
-y_pred_high = kmeans_high.predict(X)
+    #low is reduced dimensionality data
+    kmeans_low = KMeans(n_clusters=clusterNum, random_state=0)
+    kmeans_low.fit(X_reduced)
+    y_pred_low = kmeans_low.predict(X_reduced)
 
-#low is reduced dimensionality data
-kmeans_low = KMeans(n_clusters=clusterNum, random_state=0)
-kmeans_low.fit(X_reduced)
-y_pred_low = kmeans_low.predict(X_reduced)
+    # Plot 3 scatter plots -- two for high and low dimensional clustering results and one indicating the ground truth labels
 
-# Plot 3 scatter plots -- two for high and low dimensional clustering results and one indicating the ground truth labels
+    plt.subplot(3,1,1)
+    plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize, c=y_pred_high)
+    plt.colorbar(ticks=[0,1,2])
+    plt.clim(-0.5,2.5)
+    plt.xlabel("PC #1")
+    plt.ylabel("PC #2")
+    plt.title("Cluster labels for high-dimensional KMeans")
 
-plt.subplot(3,1,1)
-plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize, c=y_pred_high)
-plt.colorbar(ticks=[0,1,2])
-plt.clim(-0.5,2.5)
-plt.xlabel("PC #1")
-plt.ylabel("PC #2")
-plt.title("Cluster labels for high-dimensional KMeans")
+    plt.subplot(3,1,2)
+    plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize, c=y_pred_low)
+    plt.colorbar(ticks=[0,1,2])
+    plt.clim(-0.5,2.5)
+    plt.xlabel("PC #1")
+    plt.ylabel("PC #2")
+    plt.title("Cluster labels for low-dimensional KMeans")
 
-plt.subplot(3,1,2)
-plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize, c=y_pred_low)
-plt.colorbar(ticks=[0,1,2])
-plt.clim(-0.5,2.5)
-plt.xlabel("PC #1")
-plt.ylabel("PC #2")
-plt.title("Cluster labels for low-dimensional KMeans")
-
-plt.subplot(3,1,3)
-#plt.scatter(X_reduced[:,0], X_reduced[:,1], c=y, cmap=plt.cm.get_cmap('viridis',3))
-plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
-#plt.colorbar(ticks=[0,1,2], format=formatter)
-plt.clim(-0.5,2.5)
-plt.xlabel("PC #1")
-plt.ylabel("PC #2")
-plt.title("Ground truth labels")
-plt.show()
+    plt.subplot(3,1,3)
+    #plt.scatter(X_reduced[:,0], X_reduced[:,1], c=y, cmap=plt.cm.get_cmap('viridis',3))
+    plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
+    #plt.colorbar(ticks=[0,1,2], format=formatter)
+    plt.clim(-0.5,2.5)
+    plt.xlabel("PC #1")
+    plt.ylabel("PC #2")
+    plt.title("Ground truth labels")
+    plt.show()
