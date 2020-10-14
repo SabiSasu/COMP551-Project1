@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from datetime import date, timedelta
+from sklearn.preprocessing import StandardScaler
 
 merged_data = pd.read_csv('../data/interpolated_merged_data.csv')
 merged_data=merged_data.fillna(0)
@@ -66,13 +67,18 @@ for sym_index, symptom_name in enumerate(symptoms_list):
 #save data
 merged_data.to_csv('../data/interpolated_merged_data_scaled.csv')
 
+
+
+
+
 #PCA
 #get only columns with symptoms
+#merged_data = pd.read_csv('../data/interpolated_merged_data_scaled.csv')
 X=merged_data[merged_data.columns[3:len(symptoms_list)+3]]
 print(X)
 #Figure out how many components (kinda useless)
 pca2 = PCA()
-pca2.fit(X)
+pca2.fit_transform(StandardScaler().fit_transform(X))
 num_pc_components = len(pca2.explained_variance_ratio_)
 plt.subplot(2,1,1)
 plt.plot(np.linspace(1,num_pc_components,num_pc_components),100*pca2.explained_variance_ratio_)
@@ -89,18 +95,45 @@ plt.title("Cumulative Variance Explained vs Principal Components")
 plt.show()
 
 
+pca = PCA(n_components=20)
+principalComponents = pca.fit_transform(StandardScaler().fit_transform(X))# Plot the explained variances
+#principalComponents = pca.fit(X)# Plot the explained variances
+features = range(pca.n_components_)
+plt.bar(features, pca.explained_variance_ratio_, color='black')
+plt.xlabel('PCA features')
+plt.ylabel('variance %')
+plt.xticks(features)# Save components to a DataFrame
+PCA_components = pd.DataFrame(principalComponents)
+plt.show()
+
+plt.scatter(PCA_components[0], PCA_components[1], alpha=.1, color='black')
+plt.xlabel('PCA 1')
+plt.ylabel('PCA 2')
+plt.show()
+
 #PCA graph
 markersize=4
-pca = PCA(n_components=2)
-pca.fit(X)
-X_reduced = pca.transform(X)
+pca = PCA(n_components=3)
+#pca.fit(X)
+#X_reduced = pca.transform(X)
+X_reduced = pca.fit_transform(X)
 plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
 plt.clim(-0.5,2.5)
 plt.xlabel("PC #1")
 plt.ylabel("PC #2")
 plt.show()
 
+#PCA graph with standardized data
+markersize=4
+pca = PCA(n_components=3)
+X_reduced = pca.fit_transform(StandardScaler().fit_transform(X))
+plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
+plt.clim(-0.5,2.5)
+plt.xlabel("PC #1")
+plt.ylabel("PC #2")
+plt.show()
 
+#knee rule to determine number of clusters
 ks = range(1, 10)
 inertias = []
 for k in ks:
@@ -108,8 +141,8 @@ for k in ks:
     model = KMeans(n_clusters=k)
 
     # Fit model to samples
-    model.fit(X)
-
+    #model.fit(X)
+    model.fit(PCA_components.iloc[:, :3])
     # Append the inertia to the list of inertias
     inertias.append(model.inertia_)
 
@@ -119,7 +152,7 @@ plt.ylabel('inertia')
 plt.xticks(ks)
 plt.show()
 
-ks = range(2, 7)
+ks = range(2, 6)
 for k in ks:
     #Clusters
     clusterNum=k
