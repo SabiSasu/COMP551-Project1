@@ -6,75 +6,13 @@ from sklearn.cluster import KMeans
 from datetime import date, timedelta
 from sklearn.preprocessing import StandardScaler
 
-merged_data = pd.read_csv('../data/interpolated_merged_data.csv')
-merged_data=merged_data.fillna(0)
-chosen_symptoms=['symptom:Cough', 'symptom:Common cold' , 'symptom:Fever', 'symptom:Pneumonia']
-covid_symptoms=['symptom:Common cold', 'symptom:Cough', 'symptom:Fever', 'symptom:Hay fever', 'symptom:Infection','symptom:Nasal congestion', 'symptom:Sore throat']
-
-symptoms_list=[s for s in merged_data.columns.values if s.startswith('symptom:')]
-print(symptoms_list)
-regions = merged_data.groupby(merged_data['open_covid_region_code']).aggregate('count')
-regions = regions[merged_data]
-region_names = list(regions.index)
-#print(region_names)
-#get region
-by_state = merged_data.groupby('open_covid_region_code')
-
-date_data = by_state.get_group(region_names[0]).sort_values(by=['date'])['date']
-#print(date_data)
-#print(merged_data.columns[7:21])
-#display symptom search per region per week
-#for sym_index, symptom_name in enumerate(chosen_symptoms):
-for sym_index, symptom_name in enumerate(symptoms_list):
-    #continue
-    colors = 'b', 'g', 'r', 'c', 'm', 'y', 'k'
-    width = 0.8
-    bottoms = np.array([0])
-    tempI=0
-    colIndex=0
-    #plt.subplot(len(chosen_symptoms), 1, sym_index+1)
-    for index, region_name in enumerate(region_names):
-
-        temp = by_state.get_group(region_name).sort_values(by=['date'])[symptom_name]
-        #print('before:')
-        #print(temp)
-        temp[np.isnan(temp)] = 0
-
-        #calculate median and divide the values in array by median
-        temp = np.true_divide(temp, np.median(temp))
-        #print('after:')
-        #print(temp)
-
-        #Replace all the region values in the symptom column by the median
-        for replaceI, tempEnum in enumerate(temp):
-            merged_data.at[tempI, symptom_name] = tempEnum
-            tempI+=1
-
-
-        if colIndex >= len(colors):
-            colIndex=0
-        if symptom_name in chosen_symptoms:
-            plt.bar(date_data, temp, width, bottom=bottoms, color=colors[colIndex])
-            bottoms = np.add(bottoms, np.array(temp))
-            colIndex+=1
-
-    if symptom_name in chosen_symptoms:
-        plt.title(symptom_name)
-        plt.xticks(rotation=90)
-        plt.legend(labels=region_names, title='states', loc='upper left',bbox_to_anchor=(1.05, 1), ncol=2)
-        plt.plot(figsize=(20,10))
-        plt.show()
-       #break
-#save data
-merged_data.to_csv('../data/interpolated_merged_data_scaled.csv')
-
-
 
 #https://datascience.stackexchange.com/questions/12321/whats-the-difference-between-fit-and-fit-transform-in-scikit-learn-models
 
 #PCA
-#merged_data = pd.read_csv('../data/interpolated_merged_data_scaled.csv')
-X=merged_data[merged_data.columns[3:len(symptoms_list)+3]]
+merged_data = pd.read_csv('../data/interpolated_merged_data_scaled.csv')
+symptoms_list=[s for s in merged_data.columns.values if s.startswith('symptom:')]
+X=merged_data[merged_data.columns[4:len(symptoms_list)+4]]
 print(X)
 
 #Figure out how many components (kinda useless)
@@ -138,20 +76,6 @@ plt.ylabel("PC #2")
 plt.title("Standardized and scaled data")
 plt.show()
 
-
-
-#PCA graph with standardized data
-markersize=4
-pca = PCA(n_components=3)
-X_covidSym = merged_data[covid_symptoms]
-print(X_covidSym)
-X_covidSym_reduced = pca.fit_transform(StandardScaler().fit_transform(X_covidSym))
-plt.scatter(X_covidSym_reduced[:,0], X_covidSym_reduced[:,1], s=markersize)
-plt.clim(-0.5,2.5)
-plt.xlabel("PC #1")
-plt.ylabel("PC #2")
-plt.title("PCA for Covid Symptoms")
-plt.show()
 
 #knee rule to determine number of clusters
 ks = range(1, 10)
