@@ -6,12 +6,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn import linear_model
 from sklearn.metrics import r2_score
 from datetime import date, timedelta
+from scipy import stats
 
 #TASK 3: SUPERVISED LEARNING
 #PART 1
 
 #get the new dataset and load it into pandas dataframe
 merged_data = pd.read_csv("../data/interpolated_merged_data.csv")
+merged_data = merged_data.loc[np.abs(stats.zscore(merged_data['hospitalized_new'])) < 3]
 
 #split into training and validation sets based on region (80% train 20% validate)
 regions = merged_data.groupby(merged_data['open_covid_region_code']).aggregate('count')
@@ -281,7 +283,7 @@ r2 = r2_score(y_valid, y_predicted)
 print("KNN with regions average MAE cost: " + str(region_best_mean) + " with optimal k = " + str(region_k_array_results[region_best_index][0]) + " and optimal r2 score = " + str(region_k_array_results[region_best_index][2]))
 print("But choosing the simplest model within 1 standard deviation " + str(region_standard_dev_of_Ks) + " of the best model: " + str(region_acceptable_mean) + " with acceptable k = " + str(region_k_array_results[region_acceptable_index][0]) + " and acceptable r2 score = " + str(region_k_array_results[region_acceptable_index][2]))
 print("KNN with dates MAE cost: " + str(time_best_cost) + " with optimal k = " + str(time_k_array_results[time_best_index][0]) + " and optimal r2 score = " + str(time_k_array_results[time_best_index][2]))
-print("But choosing the simplest model within 1 standard deviation " + str(time_standard_dev_of_Ks) + " of the best model: " + str(time_acceptable_cost) + " with acceptable k = " + str(time_k_array_results[time_acceptable_index][0]) + "and acceptable r2 score = " + str(time_k_array_results[time_acceptable_index][2]))
+print("But choosing the simplest model within 1 standard deviation " + str(time_standard_dev_of_Ks) + " of the best model: " + str(time_acceptable_cost) + " with acceptable k = " + str(time_k_array_results[time_acceptable_index][0]) + " and acceptable r2 score = " + str(time_k_array_results[time_acceptable_index][2]))
 print("decision tree with region average MAE cost: " + str(region_decision_tree_avg_cost) + " and r2 score: " + str(region_decision_tree_avg_r2))
 print("decision tree with dates MAE cost: " + str(cost) + " and r2 score: " + str(r2))
 
@@ -337,4 +339,3 @@ r2 = r2_score(y_valid, y_predicted)
 
 print("linear regression with region average MAE cost: " + str(region_linear_reg_avg_cost) + " and r2 score: " + str(region_linear_reg_avg_r2))
 print("linear regression with dates MAE cost: " + str(cost) + " and r2 score: " + str(r2))
-
