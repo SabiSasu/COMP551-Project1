@@ -55,8 +55,6 @@ plt.show()
 #PCA graph
 markersize=4
 pca = PCA(n_components=3)
-#pca.fit(X)
-#X_reduced = pca.transform(X)
 X_reduced = pca.fit_transform(X)
 plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
 plt.clim(-0.5,2.5)
@@ -67,7 +65,7 @@ plt.show()
 
 #PCA graph with standardized data
 markersize=4
-pca = PCA(n_components=3)
+pca = PCA(n_components=4)
 X_reduced = pca.fit_transform(StandardScaler().fit_transform(X))
 plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
 plt.clim(-0.5,2.5)
@@ -85,7 +83,6 @@ for k in ks:
     model = KMeans(n_clusters=k)
 
     # Fit model to samples
-    #model.fit(X)
     model.fit(PCA_components.iloc[:, :3])
     # Append the inertia to the list of inertias
     inertias.append(model.inertia_)

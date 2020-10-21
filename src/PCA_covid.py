@@ -36,7 +36,6 @@ plt.show()
 
 pca = PCA(n_components=len(covid_symptoms))
 principalComponents = pca.fit_transform(StandardScaler().fit_transform(X))# Plot the explained variances
-#principalComponents = pca.fit(X)# Plot the explained variances
 features = range(pca.n_components_)
 plt.bar(features, pca.explained_variance_ratio_, color='black')
 plt.xlabel('PCA features')
@@ -52,9 +51,7 @@ plt.show()
 
 #PCA graph
 markersize=4
-pca = PCA(n_components=2)
-#pca.fit(X)
-#X_reduced = pca.transform(X)
+pca = PCA(n_components=3)
 X_reduced = pca.fit_transform(X)
 plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
 plt.clim(-0.5,2.5)
@@ -65,7 +62,7 @@ plt.show()
 
 #PCA graph with standardized data
 markersize=4
-pca = PCA(n_components=2)
+pca = PCA(n_components=3)
 X_reduced = pca.fit_transform(StandardScaler().fit_transform(X))
 plt.scatter(X_reduced[:,0], X_reduced[:,1], s=markersize)
 plt.clim(-0.5,2.5)
@@ -74,7 +71,7 @@ plt.ylabel("PC #2")
 plt.title("Standardized and scaled data")
 plt.show()
 
-
+X_reduced = pca.fit_transform(X)
 
 #knee rule to determine number of clusters
 ks = range(1, 10)
